@@ -12,7 +12,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.functions.expr
 
 class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
-
+  // This class implements the interface ForeachWriter, which has methods that get called 
+  // whenever there is a sequence of rows generated as output
   def open(partitionId: Long, version: Long): Boolean = {
     // open connection
     println(s"Open connection")
@@ -20,7 +21,6 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
   }
 
   def process(record: org.apache.spark.sql.Row) = {
-    //log.warn(s"Saving record: $record")
     println(s"Process new $record")
     CassandraDriver.connector.withSessionDo(session =>
       session.execute(s"""
@@ -36,16 +36,17 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
 }
 
 object SparkSessionBuilder {
+  // Here we build a spark session, which is needed to create a readStream and a writeStream
+  // of our structured streaming application
   def buildSparkSession() = {
     val conf = new SparkConf()
     .setAppName("Structured Streaming from Kafka to Cassandra")
-    .setMaster("local[2]")
-    .set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com")
+    .setMaster("local[2]") // if you plan to run the app on a cluster then replace this line with bellow setting
+    //.setMaster("spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077") // define location of Spark master node
+    .set("spark.driver.allowMultipleContexts", "true") // comment out this line if you plan to run the app on a cluster
+    .set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com") // define location of Cassandra DB
     .set("spark.sql.streaming.checkpointLocation", "checkpoint")
-    //.set("es.nodes", "localhost")
-    //.set("es.index.auto.create", "true")
-    //.set("es.nodes.wan.only", "true")
-    .set("spark.driver.allowMultipleContexts", "true")
+
 
     val sc = new SparkContext(conf)
     sc.setLogLevel("WARN")
@@ -57,56 +58,40 @@ object SparkSessionBuilder {
 }
 
 object CassandraDriver {
-  //val conf = new SparkConf()
-  //.setAppName("Structured Streaming from Kafka to Cassandra")
-  //.setMaster("local[2]")
-  //.set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com")
-  //.set("spark.sql.streaming.checkpointLocation", "checkpoint")
-  //.set("es.nodes", "localhost")
-  //.set("es.index.auto.create", "true")
-  //.set("es.nodes.wan.only", "true")
-  //.set("spark.driver.allowMultipleContexts", "true")
-
-  //val sc = new SparkContext(conf)
-  //sc.setLogLevel("WARN")
-
-  //private val spark = SparkSession
-  //.builder()
-  //.getOrCreate()
+  // This object will be used in CassandraSinkForeach to connect to Cassandra DB from an executor node
   private val spark = SparkSessionBuilder.buildSparkSession()
   
   import spark.implicits._
 
   val connector = CassandraConnector(spark.sparkContext.getConf)
-
+  
+  // Define Cassandra's table which will be used as a sink
+  /* For this app I used the following table:
+       CREATE TABLE fx.spark_struct_stream_sink (
+       fx_marker text,
+       timestamp_ms timestamp,
+       timestamp_dt date,
+       primary key (fx_marker));
+  */
   val namespace = "fx"
   val foreachTableSink = "spark_struct_stream_sink"
 }
 
 object KafkaToCassandra {
   def main(args: Array[String]) {
-    //val conf = new SparkConf()
-    //.setAppName("Structured Streaming from Kafka to Cassandra")
-    //.setMaster("local[2]")
-    //.set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com")
-    //.set("spark.sql.streaming.checkpointLocation", "checkpoint")
-    //.set("es.nodes", "localhost")
-    //.set("es.index.auto.create", "true")
-    //.set("es.nodes.wan.only", "true")
-    //.set("spark.driver.allowMultipleContexts", "true")
-
-    //val sc = new SparkContext(conf)
-    //sc.setLogLevel("WARN")
-
-    //val spark = SparkSession
-    //.builder()
-    //.getOrCreate()
     val spark = SparkSessionBuilder.buildSparkSession()
   
     import spark.implicits._
-
+    
+    // Define location of Kafka brokers:
     val broker = "ec2-18-209-75-68.compute-1.amazonaws.com:9092,ec2-18-205-142-57.compute-1.amazonaws.com:9092,ec2-50-17-32-144.compute-1.amazonaws.com:9092"
 
+    /*Here is an example massage which I get from a Kafka stream. It contains multiple jsons separated by \n 
+    {"timestamp_ms": "1530305100936", "fx_marker": "EUR/GBP"}
+    {"timestamp_ms": "1530305100815", "fx_marker": "USD/CHF"}
+    {"timestamp_ms": "1530305100969", "fx_marker": "EUR/CHF"}
+    {"timestamp_ms": "1530305100011", "fx_marker": "USD/CAD"}
+    */
     val dfraw = spark
     .readStream
     .format("kafka")
