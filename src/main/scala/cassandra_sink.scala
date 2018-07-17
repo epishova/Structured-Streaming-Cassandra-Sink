@@ -41,8 +41,6 @@ class SparkSessionBuilder extends Serializable {
   def buildSparkSession: SparkSession = {
     @transient lazy val conf: SparkConf = new SparkConf()
     .setAppName("Structured Streaming from Kafka to Cassandra")
-    //.setMaster("local[2]")
-    //.setMaster("spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077")
     .set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com")
     .set("spark.sql.streaming.checkpointLocation", "checkpoint")
 
