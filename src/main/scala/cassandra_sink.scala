@@ -41,8 +41,7 @@ object SparkSessionBuilder {
   def buildSparkSession() = {
     val conf = new SparkConf()
     .setAppName("Structured Streaming from Kafka to Cassandra")
-    .setMaster("local[2]") // if you plan to run the app on a cluster then replace this line with bellow setting
-    //.setMaster("spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077") // define location of Spark master node
+    .setMaster("local[2]")
     .set("spark.driver.allowMultipleContexts", "true") // comment out this line if you plan to run the app on a cluster
     .set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com") // define location of Cassandra DB
     .set("spark.sql.streaming.checkpointLocation", "checkpoint")
