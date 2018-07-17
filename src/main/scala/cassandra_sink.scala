@@ -35,30 +35,29 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
   }
 }
 
-object SparkSessionBuilder {
-  // Here we build a spark session, which is needed to create a readStream and a writeStream
-  // of our structured streaming application
-  def buildSparkSession() = {
-    val conf = new SparkConf()
+class SparkSessionBuilder extends Serializable {
+  // Build a spark session. Class is made serializable so to get access to SparkSession in a driver and executors. 
+  // Note here the usage of @transient lazy val 
+  def buildSparkSession: SparkSession = {
+    @transient lazy val conf: SparkConf = new SparkConf()
     .setAppName("Structured Streaming from Kafka to Cassandra")
     .setMaster("local[2]")
-    .set("spark.driver.allowMultipleContexts", "true") // comment out this line if you plan to run the app on a cluster
-    .set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com") // define location of Cassandra DB
+    .set("spark.cassandra.connection.host", "ec2-52-23-103-178.compute-1.amazonaws.com")
     .set("spark.sql.streaming.checkpointLocation", "checkpoint")
 
-
-    val sc = new SparkContext(conf)
-    sc.setLogLevel("WARN")
-
-    SparkSession
+    @transient lazy val spark = SparkSession
     .builder()
+    .config(conf)
     .getOrCreate()
+
+    spark
   }
 }
 
-object CassandraDriver {
-  // This object will be used in CassandraSinkForeach to connect to Cassandra DB from an executor node
-  private val spark = SparkSessionBuilder.buildSparkSession()
+object CassandraDriver extends SparkSessionBuilder {
+  // This object will be used in CassandraSinkForeach to connect to Cassandra DB from an executor.
+  // It extends SparkSessionBuilder so to use the same SparkSession on each node.
+  val spark = buildSparkSession
   
   import spark.implicits._
 
@@ -76,9 +75,10 @@ object CassandraDriver {
   val foreachTableSink = "spark_struct_stream_sink"
 }
 
-object KafkaToCassandra {
+object KafkaToCassandra extends SparkSessionBuilder {
+  // Main body of the app. It also extends SparkSessionBuilder.
   def main(args: Array[String]) {
-    val spark = SparkSessionBuilder.buildSparkSession()
+    val spark = buildSparkSession
   
     import spark.implicits._
     
