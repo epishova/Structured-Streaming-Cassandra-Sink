@@ -8,4 +8,4 @@ The idea of this application is very simple. It reads messages from Kafka, parse
 This repo contains `pom.xml` and can be built with Maven by `mvn package`. After that you can execute the application using
 `./bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.3.1,datastax:spark-cassandra-connector:2.3.0-s_2.11 --class com.insight.app.CassandraSink.KafkaToCassandra --master spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077 target/cassandra-sink-0.0.1-SNAPSHOT.jar`.
 
-Additionally, [this link] (https://stackoverflow.com/questions/34457486/why-does-spark-fail-with-failed-to-get-broadcast-0-piece0-of-broadcast-0-in-lo) helped me to understand the usage of `lazy val` in Spark. 
+Additionally, [this link](https://stackoverflow.com/questions/34457486/why-does-spark-fail-with-failed-to-get-broadcast-0-piece0-of-broadcast-0-in-lo) helped me to understand the usage of `lazy val` in Spark. 
