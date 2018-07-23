@@ -14,6 +14,8 @@ import org.apache.spark.sql.functions.expr
 class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
   // This class implements the interface ForeachWriter, which has methods that get called 
   // whenever there is a sequence of rows generated as output
+
+  val cassandraDriver = new CassandraDriver();
   def open(partitionId: Long, version: Long): Boolean = {
     // open connection
     println(s"Open connection")
@@ -22,9 +24,9 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
 
   def process(record: org.apache.spark.sql.Row) = {
     println(s"Process new $record")
-    CassandraDriver.connector.withSessionDo(session =>
+    cassandraDriver.connector.withSessionDo(session =>
       session.execute(s"""
-       insert into ${CassandraDriver.namespace}.${CassandraDriver.foreachTableSink} (fx_marker, timestamp_ms, timestamp_dt)
+       insert into ${cassandraDriver.namespace}.${cassandraDriver.foreachTableSink} (fx_marker, timestamp_ms, timestamp_dt)
        values('${record(0)}', '${record(1)}', '${record(2)}')""")
     )
   }
@@ -53,7 +55,7 @@ class SparkSessionBuilder extends Serializable {
   }
 }
 
-object CassandraDriver extends SparkSessionBuilder {
+class CassandraDriver extends SparkSessionBuilder {
   // This object will be used in CassandraSinkForeach to connect to Cassandra DB from an executor.
   // It extends SparkSessionBuilder so to use the same SparkSession on each node.
   val spark = buildSparkSession
