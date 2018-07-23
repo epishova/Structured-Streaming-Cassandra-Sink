@@ -1,7 +1,7 @@
 # Structured-Streaming-Cassandra-Sink
 ### An example of how to create and use Cassandra sink in Spark Structured Streaming application
 
-This code was developed as part of the Insight Data Engineering program. This is a simple example of how to create and use Cassandra sink in Spark Structured Streaming. I hope it will be useful for those who have just begun to work with Structured Streaming API. I am new to it too, so comments and suggestions on how to improve the application are very welcome.
+This code was developed as part of the Insight Data Engineering [project](https://github.com/epishova/FXTrue-Structured-Streaming-Insight-Project). This is a simple example of how to create and use Cassandra sink in Spark Structured Streaming. I hope it will be useful for those who have just begun to work with Structured Streaming API. I am new to it too, so comments and suggestions on how to improve the application are very welcome.
 
 The idea of this application is very simple. It reads messages from Kafka, parses them, and saves them into Cassandra. This example was run on AWS cluster, so if you'd like to test it just replace the addresses of my AWS instances with yours (everything that looks like `ec2-xx-xxx-xx-xx.compute-1.amazonaws.com`).
 
