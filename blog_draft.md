@@ -1,6 +1,6 @@
 # Cassandra Sink for Spark Structured Streaming
 
-I've recently begin to use Spark, and at some point had to store the results produced by Structured Streaming API in Cassandra database.
+I've recently begun to use Spark, and at some point had to store the results produced by Structured Streaming API in Cassandra database.
 In this blog I provide a simple example of how to create and use Cassandra sink in Spark Structured Streaming. I hope it will be 
 useful for those who have just begun to work with Structured Streaming API and wonder how to connect it with a database.
 
