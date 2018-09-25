@@ -15,8 +15,7 @@ streaming computation in Spark and allows processing streaming data by using fam
 
 Spark Structured Streaming has been marked stable in 2017. So, it is relatively new API and not all features are there yet. For example,
 there are a few types of built-in output sinks: file, kafka, console, and memory sinks. However, if you’d like to output the results 
-of your streaming computation into a database you  would need to use the foreach sink and implement the interface ForeachWriter. As 
-of Spark 2.1, this is available only for Scala and Java.
+of your streaming computation into a database you  would need to use the `foreach` sink and implement the interface `ForeachWriter`. **As of Spark 2.3.1, this is available only for Scala and Java**.
 
 Here, I assume that you've already figured out how Structured Streaming works in outline, and know how to read and process your 
 streaming data, and now are ready to output it into a database. If some of the above steps are unclear, there is a number of 
@@ -28,7 +27,7 @@ a cluster. The full code is available [here](https://github.com/epishova/Structu
 
 When I initially faced the above problem [this project](https://github.com/polomarcus/Spark-Structured-Streaming-Examples) was very 
 helpful. However, that repo may seem complex if you just began to work with Structured Streaming and need a simple example of how 
-to output data into Cassandra. Furthermore, that code workes in Spark local mode and requires some changes to run on a cluster.
+to output data into Cassandra. Furthermore, that code works in Spark local mode and requires some changes to run on a cluster.
 
 Additionally, there are good examples of how to create [JDBC sink](https://docs.databricks.com/_static/notebooks/structured-streaming-etl-kafka.html) and [MongoDB sink](https://jira.mongodb.org/browse/SPARK-134) 
 for Structured Streaming.
@@ -68,8 +67,7 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
 }
 ```
 
-Here, to connect to Cassandra from Spark, I create `CassandraDriver` object which provides access to `CassandraConnector` – a widely 
-used connector from DataStax. You can read more about it [here](https://github.com/datastax/spark-cassandra-connector). 
+I'll find the definition of CassandraDriver and the output table below but before that let's have a closer look on how the above code works. Here, to connect to Cassandra from Spark, I create `CassandraDriver` object which provides access to `CassandraConnector` – a widely used connector from DataStax. You can read more about it [here](https://github.com/datastax/spark-cassandra-connector). 
 CassandraConnector takes care of  opening and closing connection to a database, so I simply print debug messages in `open` and `close` 
 methods in my `CassandraSinkForeach` class. 
 
