@@ -22,7 +22,7 @@ streaming data, and now are ready to output it into a database. If some of the a
 good online resources which can help you to start working with Structured Streaming. In particular, official documentation is 
 a good place to start. In this article, I would like to focus on the last step when you need to store the results in a database.
 
-I’ll describe how to implement Cassandra sink for Structured Streaming, provide a simple example, and explain how to run it on 
+I will describe how to implement Cassandra sink for Structured Streaming, provide a simple example, and explain how to run it on 
 a cluster. The full code is available [here](https://github.com/epishova/Structured-Streaming-Cassandra-Sink). 
 
 When I initially faced the above problem [this project](https://github.com/polomarcus/Spark-Structured-Streaming-Examples) was very 
@@ -67,8 +67,8 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
 }
 ```
 
-I'll find the definition of CassandraDriver and the output table below but before that let's have a closer look on how the above code works. Here, to connect to Cassandra from Spark, I create `CassandraDriver` object which provides access to `CassandraConnector` – a widely used connector from DataStax. You can read more about it [here](https://github.com/datastax/spark-cassandra-connector). 
-CassandraConnector takes care of  opening and closing connection to a database, so I simply print debug messages in `open` and `close` 
+You will find the definition of `CassandraDriver` and the output table below but before that let's have a closer look on how the above code works. Here, to connect to Cassandra from Spark, I create `CassandraDriver` object which provides access to `CassandraConnector` – a widely used connector from DataStax. You can read more about it [here](https://github.com/datastax/spark-cassandra-connector). 
+`CassandraConnector` takes care of  opening and closing connection to a database, so I simply print debug messages in `open` and `close` 
 methods in my `CassandraSinkForeach` class. 
 
 The above code is invoked in the main applications as follows:
@@ -83,7 +83,7 @@ val sink = parsed
 ```
 
 `CassandraSinkForeach` will be created for each row and each worker will insert its portion of rows into a database. So, each worker 
-runs `val cassandraDriver = new CassandraDriver();` Here is how `CassandraDriver` class looks like:
+runs `val cassandraDriver = new CassandraDriver();` This is how `CassandraDriver` class looks like:
 
 ```scala
 class CassandraDriver extends SparkSessionBuilder {
@@ -130,12 +130,12 @@ class SparkSessionBuilder extends Serializable {
 }
 ```
 
-For each worker, `SparkSessionBuilder` provides access to `SparkSession` which was created on the driver. To make it work, we 
+On each worker, `SparkSessionBuilder` provides access to `SparkSession` which was created on the driver. To make it work, we 
 need to make `SparkSessionBuilder` serializable and use `@transient lazy val` which allows the serialization system to ignore 
 the `conf` and `spark` objects. Now, `buildSparkSession` is being serialized and sent to each worker but the `conf` and `spark` objects 
 is being resolved when it is needed in the worker.
 
-Now let’s look at the main body:
+Now let’s look at the application main body:
 
 ```scala
 object KafkaToCassandra extends SparkSessionBuilder {
@@ -154,6 +154,8 @@ object KafkaToCassandra extends SparkSessionBuilder {
     {"timestamp_ms": "1530305100969", "fx_marker": "EUR/CHF"}
     {"timestamp_ms": "1530305100011", "fx_marker": "USD/CAD"}
     */
+    
+    // Read incoming stream
     val dfraw = spark
     .readStream
     .format("kafka")
@@ -174,10 +176,12 @@ object KafkaToCassandra extends SparkSessionBuilder {
 
     val jsons = df.select(from_json($"value", schema) as "data").select("data.*")
 
+    // Process data. Create a new date column
     val parsed = jsons
       .withColumn("timestamp_dt", to_date(from_unixtime($"timestamp_ms"/1000.0, "yyyy-MM-dd HH:mm:ss.SSS")))
       .filter("fx_marker != ''")
 
+    // Output results into a database
     val sink = parsed
     .writeStream
     .queryName("KafkaToCassandraForeach")
@@ -198,5 +202,5 @@ to the database, they resolve `conf` and `spark` objects thus getting access to 
 ## How to build and run the app?
 
 When I moved from PySpark to Scala, it took me a while to understand how build the app. So, I included Maven `pom.xml` to the repo. 
-You can be built the app with Maven by running `mvn package` command. After that you can execute the application using 
+You can built the app with Maven by running `mvn package` command. After that you can execute the application using 
 `./bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.3.1,datastax:spark-cassandra-connector:2.3.0-s_2.11 --class com.insight.app.CassandraSink.KafkaToCassandra --master spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077 target/cassandra-sink-0.0.1-SNAPSHOT.jar`.
