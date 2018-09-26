@@ -132,7 +132,7 @@ class SparkSessionBuilder extends Serializable {
 }
 ```
 
-On each worker, `SparkSessionBuilder` provides access to `SparkSession` which was created on the driver. To make it work, we 
+On each worker, `SparkSessionBuilder` provides access to `SparkSession` which was created on the driver. To get it work, we 
 need to make `SparkSessionBuilder` serializable and use `@transient lazy val` which allows the serialization system to ignore 
 the `conf` and `spark` objects. Now, `buildSparkSession` is being serialized and sent to each worker but the `conf` and `spark` objects 
 is being resolved when it is needed in the worker.
@@ -204,7 +204,7 @@ to the database, they resolve `conf` and `spark` objects thus getting access to 
 ## How to build and run the app?
 
 When I moved from PySpark to Scala, it took me a while to understand how build the app. So, I included Maven `pom.xml` to the repo. 
-You can built the app with Maven by running `mvn package` command. After that you can execute the application using 
+You can build the app with Maven by running `mvn package` command. After that you can execute the application using 
 `./bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.3.1,datastax:spark-cassandra-connector:2.3.0-s_2.11 --class com.insight.app.CassandraSink.KafkaToCassandra --master spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077 target/cassandra-sink-0.0.1-SNAPSHOT.jar`. 
 
 This example was run on AWS cluster, so if you'd like to test it just replace the addresses of my AWS instances with yours (everything that looks like ec2-xx-xxx-xx-xx.compute-1.amazonaws.com).
