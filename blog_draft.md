@@ -2,7 +2,9 @@
 
 I've recently begun to use Spark, and at some point had to store the results produced by Structured Streaming API in Cassandra database.
 In this blog I provide a simple example of how to create and use Cassandra sink in Spark Structured Streaming. I hope it will be 
-useful for those who have just begun to work with Structured Streaming API and wonder how to connect it with a database.
+useful for those who have just begun to work with Structured Streaming API and wonder how to connect it with a database. 
+
+The idea of the application is very simple. It reads messages from Kafka, parses them, and saves them into Cassandra. 
 
 ## Why Structured Streaming?
 
@@ -203,4 +205,6 @@ to the database, they resolve `conf` and `spark` objects thus getting access to 
 
 When I moved from PySpark to Scala, it took me a while to understand how build the app. So, I included Maven `pom.xml` to the repo. 
 You can built the app with Maven by running `mvn package` command. After that you can execute the application using 
-`./bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.3.1,datastax:spark-cassandra-connector:2.3.0-s_2.11 --class com.insight.app.CassandraSink.KafkaToCassandra --master spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077 target/cassandra-sink-0.0.1-SNAPSHOT.jar`.
+`./bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.3.1,datastax:spark-cassandra-connector:2.3.0-s_2.11 --class com.insight.app.CassandraSink.KafkaToCassandra --master spark://ec2-18-232-26-53.compute-1.amazonaws.com:7077 target/cassandra-sink-0.0.1-SNAPSHOT.jar`. 
+
+This example was run on AWS cluster, so if you'd like to test it just replace the addresses of my AWS instances with yours (everything that looks like ec2-xx-xxx-xx-xx.compute-1.amazonaws.com).
