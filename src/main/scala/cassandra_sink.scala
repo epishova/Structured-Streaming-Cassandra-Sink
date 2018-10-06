@@ -15,7 +15,7 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
   // This class implements the interface ForeachWriter, which has methods that get called 
   // whenever there is a sequence of rows generated as output
 
-  val cassandraDriver = new CassandraDriver();
+  var cassandraDriver: CassandraDriver = null;
   def open(partitionId: Long, version: Long): Boolean = {
     // open connection
     println(s"Open connection")
@@ -24,6 +24,9 @@ class CassandraSinkForeach() extends ForeachWriter[org.apache.spark.sql.Row] {
 
   def process(record: org.apache.spark.sql.Row) = {
     println(s"Process new $record")
+    if (cassandraDriver == null) {
+      cassandraDriver = new CassandraDriver();
+    }
     cassandraDriver.connector.withSessionDo(session =>
       session.execute(s"""
        insert into ${cassandraDriver.namespace}.${cassandraDriver.foreachTableSink} (fx_marker, timestamp_ms, timestamp_dt)
